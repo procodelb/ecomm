@@ -1,0 +1,42 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "regions": ["iad1", "sin1", "syd1"],
+  "crons": [
+    {
+      "path": "/api/sync/suppliers",
+      "schedule": "*/30 * * * *"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "@next_public_supabase_publishable_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "NEXT_PUBLIC_SANITY_PROJECT_ID": "@next_public_sanity_project_id",
+    "NEXT_PUBLIC_SANITY_DATASET": "@next_public_sanity_dataset",
+    "NEXT_PUBLIC_SANITY_API_VERSION": "@next_public_sanity_api_version",
+    "SANITY_API_TOKEN": "@sanity_api_token",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next_public_stripe_publishable_key",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "RESEND_API_KEY": "@resend_api_key",
+    "EMAIL_FROM": "@email_from",
+    "ADMIN_NOTIFICATION_EMAIL": "@admin_notification_email",
+    "SUPPLIER_ORDERS_EMAIL": "@supplier_orders_email",
+    "OPENAI_API_KEY": "@openai_api_key",
+    "AI_MODEL": "@ai_model",
+    "AI_ASSISTANT_ENABLED": "@ai_assistant_enabled",
+    "NEXT_PUBLIC_GA_MEASUREMENT_ID": "@next_public_ga_measurement_id",
+    "GA_API_SECRET": "@ga_api_secret",
+    "NEXT_PUBLIC_META_PIXEL_ID": "@next_public_meta_pixel_id",
+    "META_CONVERSIONS_ACCESS_TOKEN": "@meta_conversions_access_token",
+    "NEXT_PUBLIC_TIKTOK_PIXEL_ID": "@next_public_tiktok_pixel_id",
+    "NEXT_PUBLIC_CLARITY_PROJECT_ID": "@next_public_clarity_project_id",
+    "NEXT_PUBLIC_HOTJAR_SITE_ID": "@next_public_hotjar_site_id",
+    "CRON_SECRET": "@cron_secret",
+    "NEXT_PUBLIC_SITE_URL": "@next_public_site_url",
+    "DATABASE_URL": "@database_url"
+  }
+}

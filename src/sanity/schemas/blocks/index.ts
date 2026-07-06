@@ -1,0 +1,12 @@
+export { homepageHero } from "./homepage-hero";
+export { homepageFeatured } from "./homepage-featured";
+export { homepageCta } from "./homepage-cta";
+export { homepageTestimonials } from "./homepage-testimonials";
+export { threeDShowcaseBlock } from "./three-d-showcase";
+export { featuredCollectionsBlock } from "./featured-collections";
+export { benefitsSectionBlock } from "./benefits-section";
+export { videoShowcaseBlock } from "./video-showcase";
+export { reviewsCarouselBlock } from "./reviews-carousel";
+export { instagramFeedBlock } from "./instagram-feed";
+export { faqSectionBlock } from "./faq-section";
+export { newsletterSectionBlock } from "./newsletter-section";
