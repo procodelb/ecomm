@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { Input } from "@/components/ui";
+import { useLocale } from "next-intl";
 
 const footerLinks = [
   {
@@ -14,7 +16,7 @@ const footerLinks = [
   {
     title: "Support",
     links: [
-      { href: "/contact", label: "Contact Us" },
+      { href: "/about#contact", label: "Contact Us" },
       { href: "/shipping", label: "Shipping & Delivery" },
       { href: "/returns", label: "Returns & Exchanges" },
       { href: "/warranty", label: "Warranty" },
@@ -41,6 +43,8 @@ const socialLinks = [
 const paymentIcons = ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
 
 export function Footer() {
+  const locale = useLocale();
+
   return (
     <footer className="relative border-t border-border bg-dark">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
@@ -48,7 +52,7 @@ export function Footer() {
       <div className="container-luxury px-6 md:px-10 lg:px-16 py-16 lg:py-24">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 lg:gap-16">
           <div className="col-span-2 md:col-span-2">
-            <Link href="/" className="flex items-center gap-3 group mb-5">
+            <Link href={`/${locale}`} className="flex items-center gap-3 group mb-5">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary font-heading text-sm font-bold group-hover:bg-primary/15 transition-all duration-300">
                 E
               </span>
@@ -84,7 +88,7 @@ export function Footer() {
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <Link
-                      href={link.href}
+                      href={`/${locale}${link.href}`}
                       className="text-sm text-muted-foreground/70 hover:text-foreground transition-colors duration-300"
                     >
                       {link.label}

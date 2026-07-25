@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { routing } from "@/lib/locale/routing";
 import { Providers } from "@/providers";
 import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { seoMetadata } from "@/lib/seo/metadata";
 import { AnalyticsProvider, ConsentBanner } from "@/components/analytics";
 import { AiChatWidget } from "@/components/ai/ai-chat-widget-wrapper";
@@ -37,6 +38,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>
+          <Footer />
         </div>
       </Providers>
     </NextIntlClientProvider>

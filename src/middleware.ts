@@ -80,6 +80,19 @@ function handleApiRateLimit(request: NextRequest): NextResponse | null {
     }
   }
 
+  if (pathname === "/api/contact") {
+    const key = getRateLimitKey(request, "contact");
+    const result = checkRateLimit(key, { windowMs: 60 * 1000, maxRequests: 5 });
+    if (!result.allowed) {
+      const response = NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
+      );
+      response.headers.set("Retry-After", String(Math.ceil((result.resetAt - Date.now()) / 1000)));
+      return response;
+    }
+  }
+
   return null;
 }
 
