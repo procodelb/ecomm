@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { setRequestLocale } from "next-intl/server";
 import { seoMetadata } from "@/lib/seo/metadata";
 import { ContactForm } from "@/components/about/contact-form";
 import {
@@ -44,6 +45,7 @@ const faqs = [
 
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   return (
     <>
       {/* ── Hero ──────────────────────────────────────────────────────── */}

@@ -4,6 +4,7 @@ import { Heading, Text } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { getOrderById } from "@/lib/api/orders";
 import { getLocaleConfig } from "@/lib/locale/config";
+import { setRequestLocale } from "next-intl/server";
 import { CheckCircle, Package, MapPin, CreditCard } from "lucide-react";
 import Link from "next/link";
 
@@ -20,6 +21,7 @@ function toNum(v: unknown): number {
 
 export default async function OrderDetailPage({ params }: Props) {
   const { locale, id } = await params;
+  setRequestLocale(locale);
 
   let order;
   try {

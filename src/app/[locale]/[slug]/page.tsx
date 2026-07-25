@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { sanityFetch } from "@/lib/sanity/fetch";
 import { pageBySlugQuery } from "@/sanity/queries/pages";
 import { Heading, Text, Caption } from "@/components/ui";
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CmsPage({ params }: Props) {
   const { locale, slug } = await params;
+  setRequestLocale(locale);
   const page = await sanityFetch<{
     _id: string; title?: { en?: string; ar?: string };
     sections: { _type: string; children?: { text: string }[]; content?: { children: { text: string }[] }[] }[];

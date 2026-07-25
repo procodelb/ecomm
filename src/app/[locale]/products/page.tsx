@@ -2,6 +2,7 @@ import { sanityFetch } from "@/lib/sanity/fetch";
 import { productsQuery } from "@/sanity/queries/products";
 import { ProductsLayout } from "@/components/products/products-layout";
 import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { seoMetadata } from "@/lib/seo/metadata";
 
 type Props = {
@@ -26,6 +27,7 @@ const localeCurrencies: Record<string, string> = {
 
 export default async function ProductsPage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const currency = localeCurrencies[locale] || "AED";
 
   const products = await sanityFetch<any[]>({

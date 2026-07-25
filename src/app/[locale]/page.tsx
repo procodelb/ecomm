@@ -2,6 +2,7 @@ import { sanityFetch } from "@/lib/sanity/fetch";
 import { homepageQuery } from "@/sanity/queries/pages";
 import { SectionRenderer } from "@/components/sanity/section-renderer";
 import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { seoMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { organizationSchema, localBusinessSchema, faqSchema } from "@/lib/seo/schemas";
@@ -140,6 +141,7 @@ const fallbackSections = [
 
 export default async function HomePage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
 
   const homepage = await sanityFetch<{
     sections: any[];

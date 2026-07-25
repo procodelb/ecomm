@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { getProductPageData, type ProductPageData } from "@/lib/api/product-page";
 import { sanityFetch } from "@/lib/sanity/fetch";
 import { getLocaleConfig } from "@/lib/locale/config";
@@ -13,7 +14,7 @@ import { ProductReviews } from "@/components/products/product-reviews";
 import { RelatedProducts } from "@/components/products/related-products";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { productSchema, breadcrumbSchema } from "@/lib/seo/schemas";
-import { getOgImageUrl } from "@/lib/seo/image";
+import { getOgImageUrl } from "@/lib/seo/og-image";
 import { seoMetadata } from "@/lib/seo/metadata";
 import { getLocalizedUrl } from "@/lib/seo/site-config";
 import { ProductViewTracker } from "@/components/analytics/product-view-tracker";
@@ -60,6 +61,7 @@ export async function generateStaticParams() {
 
 export default async function ProductPage({ params }: Props) {
   const { locale, slug } = await params;
+  setRequestLocale(locale);
   const product = await getProductPageData(slug, locale);
 
   if (!product) notFound();
