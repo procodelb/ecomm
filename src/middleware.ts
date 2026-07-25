@@ -111,11 +111,6 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(withCsrf);
   }
 
-  if (pathname.startsWith("/admin")) {
-    const authResponse = await checkAuth(request, pathname, new URL("/login", request.url));
-    return addSecurityHeaders(authResponse);
-  }
-
   if (pathname.match(/\/[^/]+\/account(\/|$)/) || pathname.startsWith("/account")) {
     const authResponse = await checkAuth(request, pathname, new URL("/login", request.url));
     return addSecurityHeaders(authResponse);
@@ -131,6 +126,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|_vercel|favicon.ico|sitemap.xml|robots.txt|images|fonts).*)",
+    "/((?!_next|_vercel|favicon.ico|sitemap.xml|robots.txt|images|fonts|admin).*)",
   ],
 };
