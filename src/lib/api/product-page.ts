@@ -240,8 +240,8 @@ export async function getProductPageData(
         })),
       };
     }
-  } catch {
-    // Prisma not available — fall through to Sanity pricing
+  } catch (e) {
+    console.warn(`[product-page] Prisma product query failed for slug=${slug}:`, e instanceof Error ? e.message : "unknown");
   }
 
   // 4. Fetch reviews from Prisma
@@ -269,8 +269,8 @@ export async function getProductPageData(
       images: typeof r.images === "string" ? [] : (r.images as string[]),
       verifiedPurchase: r.verifiedPurchase,
     }));
-  } catch {
-    // Prisma not available
+  } catch (e) {
+    console.warn(`[product-page] Prisma review query failed for slug=${slug}:`, e instanceof Error ? e.message : "unknown");
   }
 
   const averageRating =
