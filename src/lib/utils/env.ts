@@ -5,9 +5,13 @@ import { redirect } from "next/navigation";
  * in test mode, creating orders directly without calling Stripe APIs.
  */
 export function isStripeTestMode(): boolean {
+  const key = process.env.STRIPE_SECRET_KEY ?? "";
+  const pubKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
   return (
-    process.env.STRIPE_SECRET_KEY === "PLACEHOLDER" ||
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY === "PLACEHOLDER"
+    key === "PLACEHOLDER" ||
+    pubKey === "PLACEHOLDER" ||
+    key.startsWith("sk_test_") ||
+    pubKey.startsWith("pk_test_")
   );
 }
 
