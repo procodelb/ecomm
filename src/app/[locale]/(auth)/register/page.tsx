@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
 import { useAuth } from "@/providers/supabase";
 import { trackEvent } from "@/lib/analytics/client";
+import { apiFetch } from "@/lib/api/client";
 import { UserPlus, Mail, User, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
@@ -27,15 +28,10 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, fullName }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Registration failed");
+    try {
+      await apiFetch("/api/auth/register", { method: "POST", body: { email, password, fullName } });
+    } catch (err) {
+      setError((err as { message?: string })?.message ?? "Registration failed");
       setLoading(false);
       return;
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api/client";
 
 export default function EditProductPage() {
   const params = useParams();
@@ -37,7 +38,7 @@ export default function EditProductPage() {
       weightKg: form.weightKg ? parseFloat(form.weightKg as string) : null,
       tags: (form.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean),
     };
-    await fetch(`/api/admin/products/${params.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    await apiFetch(`/api/admin/products/${params.id}`, { method: "PATCH", body });
     setSaving(false);
     router.push("/admin/products");
   };

@@ -24,7 +24,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/client";
-import { getCsrfHeader } from "@/lib/security/csrf-client";
+import { apiFetch } from "@/lib/api/client";
 
 interface CheckoutPaymentConfig {
   provider: "cash_on_delivery" | "alfan" | "stripe";
@@ -76,10 +76,9 @@ export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymen
     try {
       const origin = window.location.origin;
 
-      const res = await fetch("/api/checkout", {
+      const data = await apiFetch<{ url?: string; orderId?: string; error?: string }>("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getCsrfHeader() },
-        body: JSON.stringify({
+        body: {
           items,
           locale,
           currency: config.currency,
@@ -87,14 +86,8 @@ export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymen
           paymentMethod: "cash_on_delivery",
           successUrl: `${origin}/${locale}/order/confirmation?order_id={ORDER_ID}`,
           cancelUrl: `${origin}/${locale}/checkout`,
-        }),
+        },
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error ?? "Checkout failed");
-      }
 
       trackEvent("checkout_started", {
         value: total,
@@ -120,10 +113,9 @@ export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymen
     try {
       const origin = window.location.origin;
 
-      const res = await fetch("/api/checkout", {
+      const data = await apiFetch<{ url?: string; orderId?: string; error?: string }>("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getCsrfHeader() },
-        body: JSON.stringify({
+        body: {
           items,
           locale,
           currency: config.currency,
@@ -131,14 +123,8 @@ export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymen
           paymentMethod: "alfan",
           successUrl: `${origin}/${locale}/order/confirmation?order_id={ORDER_ID}`,
           cancelUrl: `${origin}/${locale}/checkout`,
-        }),
+        },
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error ?? "Checkout failed");
-      }
 
       trackEvent("checkout_started", {
         value: total,

@@ -103,8 +103,11 @@ export async function middleware(request: NextRequest) {
     const rateLimitResponse = handleApiRateLimit(request);
     if (rateLimitResponse) return addSecurityHeaders(rateLimitResponse);
 
-    const csrfResponse = csrfProtection(request);
-    if (csrfResponse) return addSecurityHeaders(csrfResponse);
+    const csrfExempt = pathname.startsWith("/api/webhooks/") || pathname === "/api/sync/suppliers";
+    if (!csrfExempt) {
+      const csrfResponse = csrfProtection(request);
+      if (csrfResponse) return addSecurityHeaders(csrfResponse);
+    }
 
     const response = NextResponse.next();
     const withCsrf = setCsrfCookie(response);

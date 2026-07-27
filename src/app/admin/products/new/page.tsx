@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api/client";
 
 interface Supplier { id: string; code: string; name: string; }
 
@@ -34,10 +35,9 @@ export default function NewProductPage() {
       tags: form.tags ? form.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
       slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
     };
-    const res = await fetch("/api/admin/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (res.ok) {
-      const product = await res.json();
-      router.push(`/admin/products/${product.id}`);
+    const res = await apiFetch<{ id: string }>("/api/admin/products", { method: "POST", body });
+    if (res) {
+      router.push(`/admin/products/${res.id}`);
     }
     setSaving(false);
   };

@@ -7,6 +7,7 @@ import { AI_WELCOME_MESSAGES } from "@/lib/ai/config";
 import { ChatMessageBubble } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import { ProductSuggestions } from "./product-suggestions";
+import { apiFetch } from "@/lib/api/client";
 
 type Props = {
   locale: string;
@@ -45,24 +46,23 @@ export function ChatWidget({ locale, assistantType = "general", context, setting
     setSuggestedProducts(undefined);
 
     try {
-      const res = await fetch("/api/ai/chat", {
+      const res = await apiFetch<{ reply?: string; suggestedProducts?: SuggestedProduct[]; handoffData?: { subject: string; message: string } }>("/api/ai/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           message: trimmed,
           history: messages.slice(-10),
           assistantType,
           locale,
           context,
-        }),
+        },
       });
 
-      const data = await res.json();
+      const data = res;
 
       const reply: ChatMessage = {
         id: nextId(),
         role: "assistant",
-        content: data.reply || "Sorry, I couldn't process that.",
+        content: data?.reply || "Sorry, I couldn't process that.",
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, reply]);

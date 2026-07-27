@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { apiFetch } from "@/lib/api/client";
 
 type ReturnRequest = {
   id: string; reason: string; status: string; createdAt: string;
@@ -36,8 +37,8 @@ export default function AccountReturns() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    await fetch("/api/account/returns", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
+    await apiFetch("/api/account/returns", {
+      method: "POST", body: form,
     });
     setSubmitting(false);
     setShowForm(false);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api/client";
 
 type Address = {
   line1: string; line2: string; city: string; state: string;
@@ -26,12 +27,12 @@ export default function AccountAddresses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingIndex !== null) {
-      await fetch(`/api/account/addresses/${editingIndex}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
+      await apiFetch(`/api/account/addresses/${editingIndex}`, {
+        method: "PATCH", body: form,
       });
     } else {
-      await fetch("/api/account/addresses", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
+      await apiFetch("/api/account/addresses", {
+        method: "POST", body: form,
       });
     }
     setShowForm(false);
@@ -41,7 +42,7 @@ export default function AccountAddresses() {
   };
 
   const handleDelete = async (index: number) => {
-    await fetch(`/api/account/addresses/${index}`, { method: "DELETE" });
+    await apiFetch(`/api/account/addresses/${index}`, { method: "DELETE" });
     fetchAddresses();
   };
 

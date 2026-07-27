@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api/client";
 
 export default function AccountSettings() {
   const [profile, setProfile] = useState({
@@ -33,8 +34,8 @@ export default function AccountSettings() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await fetch("/api/account/profile", {
-      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile),
+    await apiFetch("/api/account/profile", {
+      method: "PATCH", body: profile,
     });
     setSaving(false);
     setSaved(true);

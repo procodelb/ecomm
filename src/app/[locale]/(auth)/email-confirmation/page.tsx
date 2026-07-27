@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
+import { apiFetch } from "@/lib/api/client";
 import { Loader2, XCircle, CheckCircle, LogIn } from "lucide-react";
 
 export default function EmailConfirmationPage() {
@@ -17,15 +18,10 @@ export default function EmailConfirmationPage() {
 
   useEffect(() => {
     async function verify() {
-      const res = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, type }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "Verification failed");
+      try {
+        await apiFetch("/api/auth/verify-email", { method: "POST", body: { token, type } });
+      } catch (err) {
+        setError((err as { message?: string })?.message ?? "Verification failed");
         setStatus("error");
         return;
       }

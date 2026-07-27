@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ProductImage } from "@/lib/seo/image";
 import { trackEvent } from "@/lib/analytics/client";
+import { apiFetch } from "@/lib/api/client";
 
 type WishlistItem = {
   id: string; productId: string; variantId: string | null; createdAt: string;
@@ -26,7 +27,7 @@ export default function AccountWishlist() {
   useEffect(() => { fetchWishlist(); }, []);
 
   const removeItem = async (productId: string) => {
-    await fetch(`/api/account/wishlist?productId=${productId}`, { method: "DELETE" });
+    await apiFetch(`/api/account/wishlist?productId=${productId}`, { method: "DELETE" });
     trackEvent("wishlist_remove", { content_ids: [productId] });
     fetchWishlist();
   };

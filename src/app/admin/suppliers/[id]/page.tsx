@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api/client";
 import { CsvExport } from "@/components/admin/csv-export";
 
 interface SupplierDetail {
@@ -39,8 +40,8 @@ export default function SupplierDetailPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await fetch(`/api/admin/suppliers/${params.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    const updated = await fetch(`/api/admin/suppliers/${params.id}`).then((r) => r.json());
+    await apiFetch(`/api/admin/suppliers/${params.id}`, { method: "PATCH", body: form });
+    const updated = await apiFetch<SupplierDetail>(`/api/admin/suppliers/${params.id}`);
     setSupplier(updated);
     setSaving(false);
   };

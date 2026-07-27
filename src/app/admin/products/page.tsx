@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api/client";
 import { CsvExport } from "@/components/admin/csv-export";
 import { Pagination } from "@/components/admin/pagination";
 
@@ -45,13 +46,13 @@ export default function ProductsPage() {
   };
 
   const toggleFeatured = async (id: string, current: boolean) => {
-    await fetch(`/api/admin/products/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ featured: !current }) });
+    await apiFetch(`/api/admin/products/${id}`, { method: "PATCH", body: { featured: !current } });
     fetchData();
   };
 
   const deleteProduct = async (id: string) => {
     if (!confirm("Delete this product?")) return;
-    await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/admin/products/${id}`, { method: "DELETE" });
     fetchData();
   };
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/client";
+import { apiFetch } from "@/lib/api/client";
 
 type Ticket = {
   id: string; subject: string; status: string; priority: string;
@@ -29,10 +30,10 @@ export default function AccountSupport() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    await fetch("/api/account/support", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+    await apiFetch("/api/account/support", {
+      method: "POST", body: {
         subject: form.subject, message: form.message, orderId: form.orderId || undefined,
-      }),
+      },
     });
     trackEvent("support_ticket_created", { subject: form.subject });
     setSubmitting(false);

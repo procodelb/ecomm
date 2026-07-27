@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api/client";
 
 export default function NewSupplierPage() {
   const router = useRouter();
@@ -25,8 +26,8 @@ export default function NewSupplierPage() {
       currencies: form.currencies.split(",").map((c) => c.trim()),
       certification: form.certification ? form.certification.split(",").map((c) => c.trim()) : [],
     };
-    const res = await fetch("/api/admin/suppliers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (res.ok) router.push("/admin/suppliers");
+    const res = await apiFetch<{ id?: string }>("/api/admin/suppliers", { method: "POST", body });
+    if (res) router.push("/admin/suppliers");
     setSaving(false);
   };
 

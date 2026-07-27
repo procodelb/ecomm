@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api/client";
 
 type Message = { id: string; authorType: string; message: string; createdAt: string };
 type TicketDetail = {
@@ -29,8 +30,8 @@ export default function TicketDetail() {
     e.preventDefault();
     if (!newMessage.trim()) return;
     setSending(true);
-    await fetch(`/api/account/support/${id}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: newMessage }),
+    await apiFetch(`/api/account/support/${id}`, {
+      method: "POST", body: { message: newMessage },
     });
     setSending(false);
     setNewMessage("");

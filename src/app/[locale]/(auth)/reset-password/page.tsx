@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
+import { apiFetch } from "@/lib/api/client";
 import { Lock, CheckCircle, ArrowLeft } from "lucide-react";
 
 export default function ResetPasswordPage() {
@@ -32,15 +33,10 @@ export default function ResetPasswordPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/reset-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, password }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Failed to reset password");
+    try {
+      await apiFetch("/api/auth/reset-password", { method: "POST", body: { token, password } });
+    } catch (err) {
+      setError((err as { message?: string })?.message ?? "Failed to reset password");
       setLoading(false);
       return;
     }

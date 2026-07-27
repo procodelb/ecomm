@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api/client";
 import { Pagination } from "@/components/admin/pagination";
 
 interface Supplier {
@@ -35,7 +36,7 @@ export default function SuppliersPage() {
 
   const deleteSupplier = async (id: string) => {
     if (!confirm("Delete this supplier and all associated data?")) return;
-    await fetch(`/api/admin/suppliers/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/admin/suppliers/${id}`, { method: "DELETE" });
     fetchData();
   };
 

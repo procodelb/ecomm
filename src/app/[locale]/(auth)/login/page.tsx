@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
 import { useAuth } from "@/providers/supabase";
 import { trackEvent } from "@/lib/analytics/client";
+import { apiFetch } from "@/lib/api/client";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -27,15 +28,10 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Login failed");
+    try {
+      await apiFetch("/api/auth/login", { method: "POST", body: { email, password } });
+    } catch (err) {
+      setError((err as { message?: string })?.message ?? "Login failed");
       setLoading(false);
       return;
     }

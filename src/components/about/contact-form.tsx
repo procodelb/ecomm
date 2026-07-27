@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { apiFetch } from "@/lib/api/client";
 
 type FormData = {
   fullName: string;
@@ -56,12 +57,10 @@ export function ContactForm() {
 
     setStatus("loading");
     try {
-      const res = await fetch("/api/contact", {
+      await apiFetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: formData,
       });
-      if (!res.ok) throw new Error("Failed");
       setStatus("success");
       setFormData({ fullName: "", email: "", phone: "", country: "", subject: "", orderNumber: "", message: "", contactMethod: "email", consent: false, website: "" });
       setSubmitted(false);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
+import { apiFetch } from "@/lib/api/client";
 import { Mail, ArrowLeft } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -18,15 +19,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Something went wrong");
+    try {
+      await apiFetch("/api/auth/forgot-password", { method: "POST", body: { email } });
+    } catch (err) {
+      setError((err as { message?: string })?.message ?? "Something went wrong");
       setLoading(false);
       return;
     }

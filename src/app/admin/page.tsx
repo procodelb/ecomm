@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { apiFetch } from "@/lib/api/client";
 import { StatusBadge } from "@/components/admin/status-badge";
 
 interface Stats {
@@ -123,19 +124,14 @@ export default function AdminDashboard() {
     setSyncing(true);
     setSyncResult(null);
     try {
-      const res = await fetch("/api/admin/sync", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        setSyncResult({
-          status: "success",
-          message: `Synced ${data.totals.suppliers} suppliers — ${data.totals.productsCreated} created, ${data.totals.productsUpdated} updated (${data.durationMs}ms)`,
-        });
-        fetchStats();
-      } else {
-        setSyncResult({ status: "error", message: data.error ?? "Sync failed" });
-      }
+      const data = await apiFetch<{ totals: { suppliers: number; productsCreated: number; productsUpdated: number }; durationMs: number }>("/api/admin/sync", { method: "POST" });
+      setSyncResult({
+        status: "success",
+        message: `Synced ${data.totals.suppliers} suppliers — ${data.totals.productsCreated} created, ${data.totals.productsUpdated} updated (${data.durationMs}ms)`,
+      });
+      fetchStats();
     } catch (err) {
-      setSyncResult({ status: "error", message: err instanceof Error ? err.message : "Network error" });
+      setSyncResult({ status: "error", message: (err as { message?: string })?.message ?? "Sync failed" });
     } finally {
       setSyncing(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { apiFetch } from "@/lib/api/client";
 import { CsvExport } from "@/components/admin/csv-export";
 import { Pagination } from "@/components/admin/pagination";
 
@@ -42,7 +43,7 @@ export default function InventoryPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const updateQty = async (id: string, quantity: number) => {
-    await fetch("/api/admin/inventory", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, quantity }) });
+    await apiFetch("/api/admin/inventory", { method: "PATCH", body: { id, quantity } });
     fetchData();
   };
 

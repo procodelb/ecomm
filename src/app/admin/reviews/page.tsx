@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { apiFetch } from "@/lib/api/client";
 import { CsvExport } from "@/components/admin/csv-export";
 import { Pagination } from "@/components/admin/pagination";
 
@@ -38,13 +39,13 @@ export default function ReviewsPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const moderate = async (id: string, newStatus: string) => {
-    await fetch("/api/admin/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status: newStatus }) });
+    await apiFetch("/api/admin/reviews", { method: "PATCH", body: { id, status: newStatus } });
     fetchData();
   };
 
   const deleteReview = async (id: string) => {
     if (!confirm("Delete this review?")) return;
-    await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
     fetchData();
   };
 

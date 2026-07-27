@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api/client";
 
 interface AdminUser {
   id: string; email: string; firstName: string; lastName: string;
@@ -27,16 +28,16 @@ export default function SettingsPage() {
 
   const updateRole = async (adminUserId: string, role: string) => {
     setSaving(true);
-    await fetch("/api/admin/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ adminUserId, role }) });
-    const updated = await fetch("/api/admin/settings").then((r) => r.json());
+    await apiFetch("/api/admin/settings", { method: "PATCH", body: { adminUserId, role } });
+    const updated = await apiFetch<SettingsData>("/api/admin/settings");
     setData(updated);
     setSaving(false);
   };
 
   const toggleActive = async (adminUserId: string, isActive: boolean) => {
     setSaving(true);
-    await fetch("/api/admin/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ adminUserId, isActive: !isActive }) });
-    const updated = await fetch("/api/admin/settings").then((r) => r.json());
+    await apiFetch("/api/admin/settings", { method: "PATCH", body: { adminUserId, isActive: !isActive } });
+    const updated = await apiFetch<SettingsData>("/api/admin/settings");
     setData(updated);
     setSaving(false);
   };
