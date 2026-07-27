@@ -42,6 +42,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var p=location.pathname;if(p.indexOf("/ar-AE")===0){document.documentElement.lang="ar";document.documentElement.dir="rtl"}else if(p.indexOf("/en-AU")===0){document.documentElement.lang="en";document.documentElement.dir="ltr"}})()`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
