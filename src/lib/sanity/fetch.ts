@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_rethrow } from "next/navigation";
 import type { QueryParams } from "@sanity/client";
 import { ensureClient } from "./client";
 
@@ -10,6 +11,7 @@ export class SanityError extends Error {
     | "query"
     | "timeout"
     | "auth"
+    | "nextjs"
     | "unknown";
   projectId?: string;
   dataset?: string;
@@ -73,11 +75,14 @@ export async function sanityFetch<QueryResponse>({
   const config = client.config();
   try {
     const result = await client.fetch<QueryResponse>(query, params, {
-      cache: "no-store",
       next: { tags, revalidate: revalidate ?? 60 },
     });
     return result ?? null;
   } catch (err: unknown) {
+    unstable_rethrow(err);
+
+    const message = err instanceof Error ? err.message : String(err);
+
     const errObj = err as Record<string, unknown>;
     const statusCode =
       typeof errObj?.statusCode === "number"
@@ -86,14 +91,12 @@ export async function sanityFetch<QueryResponse>({
           ? errObj.status
           : undefined;
 
-    const message = err instanceof Error ? err.message : String(err);
-
     let category: SanityError["category"] = "unknown";
     if (statusCode === 401 || statusCode === 403) category = "auth";
     else if (statusCode === 408 || message.includes("timeout")) category = "timeout";
     else if (statusCode && statusCode >= 400 && statusCode < 500) category = "query";
     else if (statusCode && statusCode >= 500) category = "network";
-    else if (message.includes("fetch") || message.includes("network") || message.includes("ENOTFOUND") || message.includes("ECONNREFUSED")) category = "network";
+    else if (message.includes("ENOTFOUND") || message.includes("ECONNREFUSED") || message.includes("fetch failed")) category = "network";
     else if (message.includes("projectId") || message.includes("dataset") || message.includes("not configured")) category = "config";
 
     const logInfo = {

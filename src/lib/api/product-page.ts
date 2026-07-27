@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_rethrow } from "next/navigation";
 import { sanityFetch } from "@/lib/sanity/fetch";
 import { productBySlugQuery, relatedProductsQuery, productVariantsQuery } from "@/sanity/queries/products";
 import { reviewsByProductQuery } from "@/sanity/queries/pages";
@@ -241,6 +242,7 @@ export async function getProductPageData(
       };
     }
   } catch (e) {
+    unstable_rethrow(e);
     console.warn(`[product-page] Prisma product query failed for slug=${slug}:`, e instanceof Error ? e.message : "unknown");
   }
 
@@ -270,6 +272,7 @@ export async function getProductPageData(
       verifiedPurchase: r.verifiedPurchase,
     }));
   } catch (e) {
+    unstable_rethrow(e);
     console.warn(`[product-page] Prisma review query failed for slug=${slug}:`, e instanceof Error ? e.message : "unknown");
   }
 
