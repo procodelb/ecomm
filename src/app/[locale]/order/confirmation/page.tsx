@@ -16,6 +16,8 @@ type OrderData = {
   total: number;
   currency: string;
   status: string;
+  paymentMethod: string | null;
+  paymentStatus: string | null;
   createdAt: string;
   itemCount: number;
 };
@@ -75,7 +77,11 @@ export default function OrderConfirmationPage() {
             </Heading>
 
             <Text muted>
-              Thank you for your purchase. Your order has been received and is being processed.
+              {order?.paymentMethod === "alfan"
+                ? "Your order has been received. Please complete your payment via Alfan. Your order will be confirmed once payment is verified."
+                : order?.paymentMethod === "cash_on_delivery"
+                  ? "Thank you! Your order has been received. Payment will be collected on delivery."
+                  : "Thank you for your purchase. Your order has been received and is being processed."}
             </Text>
 
             {order && !loading && (

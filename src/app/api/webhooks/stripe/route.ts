@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { stripe } from "@/lib/stripe/server";
+import { stripe, getUseRealStripe } from "@/lib/stripe/server";
 import { prisma } from "@/lib/prisma";
-import { createOrder } from "@/lib/api/orders";
-import { findOrCreateCustomer } from "@/lib/api/customers";
+import { markOrderPaid } from "@/lib/api/orders";
 import { sendEmail } from "@/lib/email/send";
 import { buildOrderConfirmationHtml } from "@/lib/email/templates/order-confirmation";
 import { buildAdminNotificationHtml } from "@/lib/email/templates/admin-notification";
 import { dispatchSupplierOrders } from "@/lib/supplier/orders";
+import { deductInventoryForOrder } from "@/lib/api/inventory";
 import { logWebhookEvent, updateWebhookLogStatus } from "@/lib/webhook/logger";
 import { getLocaleConfig } from "@/lib/locale/config";
 import { trackServerPurchase } from "@/lib/analytics/server";
@@ -23,68 +23,57 @@ export async function POST(request: Request) {
   const signature = headersList.get("stripe-signature") ?? undefined;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  // 2. Verify signature (skip in test mode)
+  // 2. Verify signature — ALWAYS required when Stripe is configured
   let event: { id: string; type: string; data: { object: Record<string, unknown> }; api_version?: string; created?: number; livemode?: boolean };
 
-  if (process.env.STRIPE_SECRET_KEY === "PLACEHOLDER") {
-    // Test mode — parse JSON directly, no signature check
-    try {
-      const parsed = JSON.parse(rawBody);
-      event = {
-        id: parsed.id ?? `evt_test_${Date.now()}`,
-        type: parsed.type ?? "checkout.session.completed",
-        data: { object: parsed.data?.object ?? {} },
-      };
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid JSON body" },
-        { status: 400 },
-      );
-    }
-  } else {
-    if (!stripe) {
-      return NextResponse.json(
-        { error: "Payment service not configured" },
-        { status: 503 },
-      );
-    }
-
-    if (!signature) {
-      return NextResponse.json(
-        { error: "Missing stripe-signature header" },
-        { status: 400 },
-      );
-    }
-
-    if (!webhookSecret) {
-      return NextResponse.json(
-        { error: "Webhook secret not configured" },
-        { status: 503 },
-      );
-    }
-
-    try {
-      const constructed = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-      event = {
-        id: constructed.id,
-        type: constructed.type,
-        data: { object: constructed.data.object as unknown as Record<string, unknown> },
-        api_version: constructed.api_version ?? undefined,
-        created: constructed.created,
-        livemode: constructed.livemode,
-      };
-    } catch (err) {
-      return NextResponse.json(
-        {
-          error: "Webhook signature verification failed",
-          detail: err instanceof Error ? err.message : undefined,
-        },
-        { status: 400 },
-      );
-    }
+  if (!getUseRealStripe()) {
+    // Mock mode: no Stripe configured — reject webhook calls
+    return NextResponse.json(
+      { error: "Webhook endpoint not available in mock mode" },
+      { status: 404 },
+    );
   }
 
-  // 4. Check idempotency — skip if this event was already processed
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Payment service not configured" },
+      { status: 503 },
+    );
+  }
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: "Missing stripe-signature header" },
+      { status: 400 },
+    );
+  }
+
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: "Webhook secret not configured" },
+      { status: 503 },
+    );
+  }
+
+  try {
+    const constructed = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    event = {
+      id: constructed.id,
+      type: constructed.type,
+      data: { object: constructed.data.object as unknown as Record<string, unknown> },
+      api_version: constructed.api_version ?? undefined,
+      created: constructed.created,
+      livemode: constructed.livemode,
+    };
+  } catch (err) {
+    console.error("[webhook] signature verification failed:", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "Webhook signature verification failed" },
+      { status: 400 },
+    );
+  }
+
+  // 3. Check idempotency — skip if this event was already processed
   let existingLog = false;
   try {
     const duplicate = await prisma.webhookLog.findFirst({
@@ -99,10 +88,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true, duplicate: true });
     }
   } catch {
-    // DB unavailable — continue;
+    // DB unavailable — continue
   }
 
-  // 5. Log incoming event
+  // 4. Log incoming event
   const webhookLogId = existingLog
     ? null
     : await logWebhookEvent({
@@ -128,17 +117,11 @@ export async function POST(request: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Record<string, unknown>;
         const paymentIntentId = session.payment_intent as string | null;
-
-        if (!paymentIntentId) {
-          await updateWebhookLogStatus(webhookLogId ?? "", {
-            processingStatus: "completed",
-            responseStatus: 200,
-          });
-          return NextResponse.json({ received: true });
-        }
+        const sessionId = session.id as string;
 
         // Parse metadata
         const metadata = (session.metadata ?? {}) as Record<string, string>;
+        const orderId = metadata.orderId;
         const locale = metadata.locale ?? "en-AE";
         const currency = (metadata.currency ?? "AED") as "AED" | "AUD";
         const config = getLocaleConfig(locale);
@@ -152,57 +135,25 @@ export async function POST(request: Request) {
           quantity: number;
         }> = metadata.items ? JSON.parse(metadata.items) : [];
 
-        if (!rawItems.length) {
-          await updateWebhookLogStatus(webhookLogId ?? "", {
-            processingStatus: "completed",
-            responseStatus: 200,
-          });
-          return NextResponse.json({ received: true });
-        }
-
-        // Addresses
-        const collectedInfo = (session.collected_information ?? null) as Record<string, unknown> | null;
-        const shippingInfo = (collectedInfo?.shipping_details ?? null) as Record<string, unknown> | null;
-        const shippingAddr = (shippingInfo?.address ?? {}) as Record<string, unknown>;
-        const custDetails = (session.customer_details ?? {}) as Record<string, unknown>;
-        const custAddr = (custDetails?.address ?? {}) as Record<string, unknown>;
-
-        const shippingAddress = {
-          line1: (shippingAddr.line1 as string) ?? "",
-          line2: (shippingAddr.line2 as string) ?? "",
-          city: (shippingAddr.city as string) ?? "",
-          state: (shippingAddr.state as string) ?? "",
-          postalCode: (shippingAddr.postal_code as string) ?? "",
-          country: (shippingAddr.country as string) ?? "",
-        };
-
-        const billingAddress = {
-          line1: (custAddr.line1 as string) ?? "",
-          line2: (custAddr.line2 as string) ?? "",
-          city: (custAddr.city as string) ?? "",
-          state: (custAddr.state as string) ?? "",
-          postalCode: (custAddr.postal_code as string) ?? "",
-          country: (custAddr.country as string) ?? "",
-        };
-
         // Stripe amounts are in cents
         const amountSubtotal = (session.amount_subtotal ?? 0) as number;
         const amountTotal = (session.amount_total ?? 0) as number;
         const shipping = (session.shipping_cost ?? {}) as Record<string, unknown>;
         const totalDetails = (session.total_details ?? {}) as Record<string, unknown>;
 
-        const subtotal = amountSubtotal / 100;
-        const shippingCost = ((shipping.amount_total ?? 0) as number) / 100;
+        const _subtotal = amountSubtotal / 100;
+        const _shippingCost = ((shipping.amount_total ?? 0) as number) / 100;
         const total = amountTotal / 100;
-        const taxAmount = ((totalDetails.amount_tax ?? 0) as number) / 100;
-        const taxRate = subtotal > 0 ? taxAmount / subtotal : 0;
+        const _taxAmount = ((totalDetails.amount_tax ?? 0) as number) / 100;
 
+        const custDetails = (session.customer_details ?? {}) as Record<string, unknown>;
         const customerEmail = (custDetails.email ?? "") as string;
 
-        // ── a. Find or upsert customer ──────────────────────────────────
+        // ── a. Find or create customer ──
         let customerId: string | null = null;
         if (customerEmail) {
           try {
+            const { findOrCreateCustomer } = await import("@/lib/api/customers");
             const customer = await findOrCreateCustomer({
               email: customerEmail,
               firstName: ((custDetails.name ?? "") as string).split(" ")[0] || undefined,
@@ -217,70 +168,101 @@ export async function POST(request: Request) {
           }
         }
 
-        // ── b. Create order + items ────────────────────────────────────
-        const order = await createOrder({
-          customerEmail: customerEmail || "guest@example.com",
-          customerId,
-          items: rawItems.map((item) => ({
-            id: item.id,
-            productId: item.productId ?? "",
-            variantId: item.variantId ?? null,
-            sku: null,
-            title: item.title,
-            variantTitle: null,
-            attributes: {},
-            price: item.price,
-            quantity: item.quantity,
-            image: null,
-            locale,
-            currency,
-          })),
-          subtotal,
-          shippingCost,
-          taxAmount,
-          taxRate,
-          total,
-          currency,
-          locale,
-          paymentIntentId,
-          paymentMethod: "card",
-          shippingAddress,
-          billingAddress,
-          shippingZone: "standard",
-        });
-
-        // ── c. Deduct inventory (fire-and-forget) ──────────────────────
-        if (customerEmail) {
-          deductInventory(order.id).catch(fireAndForget("deductInventory"));
+        // ── b. Update existing order to paid ──
+        let order;
+        if (orderId) {
+          // Find the pending order created by checkout
+          const existingOrder = await prisma.order.findUnique({ where: { id: orderId } });
+          if (existingOrder && existingOrder.status === "pending") {
+            order = await markOrderPaid(orderId, paymentIntentId ?? sessionId);
+          } else if (existingOrder) {
+            // Order already processed (duplicate webhook) — skip
+            await updateWebhookLogStatus(webhookLogId ?? "", {
+              processingStatus: "completed",
+              responseStatus: 200,
+            });
+            return NextResponse.json({ received: true, duplicate: true });
+          }
         }
 
-        // ── d. Track purchase server-side (fire-and-forget) ───────────
-        trackServerPurchase({
-          transactionId: order.id,
-          value: total,
-          currency,
-          items: rawItems.map((i) => ({ id: i.id, name: i.title, price: i.price, quantity: i.quantity })),
-        }, customerId ?? undefined).catch(fireAndForget("trackServerPurchase"));
+        // Fallback: if order wasn't found by orderId, look up by session ID
+        if (!order) {
+          order = await prisma.order.findFirst({ where: { paymentIntentId: sessionId } });
+          if (order && order.status === "pending") {
+            order = await markOrderPaid(order.id, paymentIntentId ?? sessionId);
+          }
+        }
 
-        // ── e. Dispatch supplier orders (fire-and-forget) ──────────────
-        dispatchSupplierOrders(order.id).catch(fireAndForget("dispatchSupplierOrders"));
+        if (!order) {
+          // No matching order found — webhook is orphaned (maybe from a different session)
+          await updateWebhookLogStatus(webhookLogId ?? "", {
+            processingStatus: "completed",
+            responseStatus: 200,
+          });
+          return NextResponse.json({ received: true, note: "no matching order" });
+        }
 
-        // ── f. Send customer confirmation email (fire-and-forget) ──────
-        if (customerEmail) {
+        // ── c. Deduct inventory (fire-and-forget) ──
+        if (order) {
+          deductInventoryForOrder(order.id).catch(fireAndForget("deductInventory"));
+        }
+
+        // ── d. Track purchase server-side (fire-and-forget) ──
+        if (order) {
+          trackServerPurchase({
+            transactionId: order.id,
+            value: total || Number(order.total),
+            currency,
+            items: rawItems.map((i) => ({ id: i.id, name: i.title, price: i.price, quantity: i.quantity })),
+          }, customerId ?? undefined).catch(fireAndForget("trackServerPurchase"));
+        }
+
+        // ── e. Dispatch supplier orders (fire-and-forget) ──
+        if (order) {
+          dispatchSupplierOrders(order.id).catch(fireAndForget("dispatchSupplierOrders"));
+        }
+
+        // ── f. Send customer confirmation email (fire-and-forget) ──
+        if (order && customerEmail) {
           sendCustomerConfirmation(order.id, customerEmail, locale, config.currencySymbol).catch(fireAndForget("sendCustomerConfirmation"));
         }
 
-        // ── g. Notify admin (fire-and-forget) ──────────────────────────
-        notifyAdmin(order.id, config.currencySymbol).catch(fireAndForget("notifyAdmin"));
+        // ── g. Notify admin (fire-and-forget) ──
+        if (order) {
+          notifyAdmin(order.id, config.currencySymbol).catch(fireAndForget("notifyAdmin"));
+        }
 
-        // ── h. Mark webhook log as completed ──────────────────────────
+        // ── h. Mark webhook log as completed ──
         await updateWebhookLogStatus(webhookLogId ?? "", {
           processingStatus: "completed",
           responseStatus: 200,
           processedAt: new Date(),
         });
 
-        return NextResponse.json({ received: true, orderId: order.id });
+        return NextResponse.json({ received: true, orderId: order?.id });
+      }
+
+      // ── payment_intent.succeeded ────────────────────────────────────
+      case "payment_intent.succeeded": {
+        const pi = event.data.object as Record<string, unknown>;
+        const succeededIntentId = (pi.id ?? "") as string;
+
+        // Find order by paymentIntentId (might already be paid via checkout.session.completed)
+        const order = await prisma.order.findFirst({
+          where: { paymentIntentId: succeededIntentId },
+        });
+
+        if (order && order.status === "pending") {
+          await markOrderPaid(order.id, succeededIntentId);
+        }
+
+        await updateWebhookLogStatus(webhookLogId ?? "", {
+          processingStatus: "completed",
+          responseStatus: 200,
+          processedAt: new Date(),
+        });
+
+        return NextResponse.json({ received: true });
       }
 
       // ── payment_intent.payment_failed ──────────────────────────────
@@ -289,7 +271,7 @@ export async function POST(request: Request) {
         const failedIntentId = (pi.id ?? "") as string;
         const lastError = (pi.last_payment_error ?? {}) as Record<string, unknown>;
 
-        // Attempt to mark the order as failed
+        // Mark order as failed
         try {
           await prisma.order.updateMany({
             where: { paymentIntentId: failedIntentId },
@@ -324,6 +306,7 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[webhook] handler error for ${event.type}:`, message);
 
     await updateWebhookLogStatus(webhookLogId ?? "", {
       processingStatus: "failed",
@@ -331,78 +314,13 @@ export async function POST(request: Request) {
     }).catch(fireAndForget("updateWebhookLogStatus"));
 
     return NextResponse.json(
-      { error: "Webhook handler failed", detail: message },
+      { error: "Webhook handler failed" },
       { status: 500 },
     );
   }
 }
 
 // ── Background helpers (fire-and-forget, errors handled internally) ───────
-
-async function deductInventory(orderId: string) {
-  try {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
-    if (!order) return;
-
-    for (const item of order.items) {
-      if (item.productId) {
-        // Deduct product-level inventory
-        const inventory = await prisma.inventory.findFirst({
-          where: { productId: item.productId },
-        });
-        if (inventory) {
-          const newQty = Math.max(0, inventory.quantity - item.quantity);
-          await prisma.inventory.update({
-            where: { id: inventory.id },
-            data: {
-              quantity: newQty,
-              reserved: inventory.reserved + item.quantity,
-            },
-          });
-          await prisma.inventoryMovement.create({
-            data: {
-              inventoryId: inventory.id,
-              movementType: "sold",
-              quantity: item.quantity,
-              referenceType: "order",
-              referenceId: orderId,
-              note: `Order #${order.orderNumber}`,
-            },
-          });
-        }
-
-        // Deduct variant-level inventory
-        if (item.variantId) {
-          const variantInv = await prisma.inventory.findFirst({
-            where: { variantId: item.variantId },
-          });
-          if (variantInv) {
-            const newQty = Math.max(0, variantInv.quantity - item.quantity);
-            await prisma.inventory.update({
-              where: { id: variantInv.id },
-              data: { quantity: newQty },
-            });
-            await prisma.inventoryMovement.create({
-              data: {
-                inventoryId: variantInv.id,
-                movementType: "sold",
-                quantity: item.quantity,
-                referenceType: "order",
-                referenceId: orderId,
-                note: `Order #${order.orderNumber}`,
-              },
-            });
-          }
-        }
-      }
-    }
-  } catch {
-    // Non-fatal
-  }
-}
 
 async function sendCustomerConfirmation(
   orderId: string,

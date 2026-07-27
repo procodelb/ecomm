@@ -3,12 +3,15 @@ const REQUIRED_PROD_ENV_VARS = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
-  "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-  "STRIPE_SECRET_KEY",
-  "STRIPE_WEBHOOK_SECRET",
   "RESEND_API_KEY",
   "NEXT_PUBLIC_SITE_URL",
   "CRON_SECRET",
+] as const;
+
+const STRIPE_PROD_ENV_VARS = [
+  "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
 ] as const;
 
 const PLACEHOLDER_VALUES = [
@@ -51,6 +54,27 @@ export function validateProductionEnv(): EnvCheckResult {
       result.placeholders.push(key);
       if (isProd) {
         result.valid = false;
+      }
+    }
+  }
+
+  // Only require Stripe env vars when Stripe is the active payment provider
+  const provider = (process.env.PAYMENT_PROVIDER ?? "cash_on_delivery").trim().toLowerCase();
+  if (provider === "stripe") {
+    for (const key of STRIPE_PROD_ENV_VARS) {
+      const value = process.env[key];
+      if (!value) {
+        result.missing.push(key);
+        result.valid = false;
+        continue;
+      }
+
+      const isPlaceholder = PLACEHOLDER_VALUES.some((p) => value.toLowerCase().includes(p));
+      if (isPlaceholder) {
+        result.placeholders.push(key);
+        if (isProd) {
+          result.valid = false;
+        }
       }
     }
   }

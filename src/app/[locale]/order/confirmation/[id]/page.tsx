@@ -138,16 +138,30 @@ export default async function OrderDetailPage({ params }: Props) {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Method</span>
-              <span className="capitalize">{order.paymentMethod}</span>
+              <span className="capitalize">
+                {order.paymentMethod === "alfan" ? "Alfan" : order.paymentMethod === "cash_on_delivery" ? "Cash on Delivery" : order.paymentMethod === "card" ? "Card (Stripe)" : order.paymentMethod}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Status</span>
-              <span className="text-success capitalize">{order.paymentStatus}</span>
+              <span className={order.paymentStatus === "paid" ? "text-success" : "text-amber-500"}>
+                {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus === "pending" ? "Pending" : order.paymentStatus}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Amount Paid</span>
               <span className="font-medium">{fmt(amountPaid)}</span>
             </div>
+            {order.paymentMethod === "alfan" && order.paymentStatus !== "paid" && (
+              <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                Your payment is being verified. You will receive a confirmation once the payment is processed.
+              </p>
+            )}
+            {order.paymentMethod === "cash_on_delivery" && (
+              <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                Payment will be collected at the time of delivery.
+              </p>
+            )}
           </div>
         </div>
       </Container>

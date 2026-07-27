@@ -15,22 +15,26 @@ interface CreateOrderParams {
   total: number;
   currency: string;
   locale: string;
-  paymentIntentId: string;
+  paymentIntentId: string | null;
   paymentMethod: string;
   shippingAddress: Prisma.InputJsonValue;
   billingAddress: Prisma.InputJsonValue;
   shippingZone: string;
+  /** Start as 'pending' (default) or 'payment_received' (webhook-confirmed). */
+  initialStatus?: "pending" | "payment_received";
 }
 
 export async function createOrder(params: CreateOrderParams) {
-  const { items, ...orderData } = params;
+  const { items, initialStatus = "pending", ...orderData } = params;
+
+  const isPaid = initialStatus === "payment_received";
 
   return prisma.order.create({
     data: {
       customerEmail: orderData.customerEmail,
       orderNumber: `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
       ...(orderData.customerId ? { customer: { connect: { id: orderData.customerId } } } : {}),
-      status: "payment_received",
+      status: initialStatus,
       currency: orderData.currency as "AED" | "AUD" | "USD" | "EUR" | "GBP",
       locale: orderData.locale,
       subtotal: orderData.subtotal,
@@ -38,15 +42,15 @@ export async function createOrder(params: CreateOrderParams) {
       taxAmount: orderData.taxAmount,
       taxRate: orderData.taxRate,
       total: orderData.total,
-      amountPaid: orderData.total,
+      amountPaid: isPaid ? orderData.total : 0,
       paymentIntentId: orderData.paymentIntentId,
       paymentMethod: orderData.paymentMethod,
-      paymentStatus: "paid",
-      paidAt: new Date(),
+      paymentStatus: isPaid ? "paid" : "pending",
+      paidAt: isPaid ? new Date() : null,
       shippingAddress: orderData.shippingAddress,
       billingAddress: orderData.billingAddress,
       shippingZone: orderData.shippingZone,
-      metadata: { source: "stripe_webhook" },
+      metadata: { source: isPaid ? "stripe_webhook" : "checkout" },
       items: {
         create: items.map((item) => ({
           ...(item.productId ? { productId: item.productId } : {}),
@@ -78,6 +82,23 @@ export async function updateOrderStatus(
       status,
       paymentStatus: status === "payment_received" ? "paid" : "failed",
       ...(status === "payment_received" ? { paidAt: new Date() } : {}),
+    },
+  });
+}
+
+export async function markOrderPaid(orderId: string, paymentIntentId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { total: true } });
+  if (!order) return null;
+
+  return prisma.order.update({
+    where: { id: orderId },
+    data: {
+      status: "payment_received",
+      paymentStatus: "paid",
+      amountPaid: order.total,
+      paymentIntentId,
+      paidAt: new Date(),
+      metadata: { source: "stripe_webhook" },
     },
   });
 }

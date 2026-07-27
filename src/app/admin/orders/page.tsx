@@ -15,6 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
 interface Order {
   id: string; orderNumber: string; customerEmail: string; status: string;
   total: number; currency: string; createdAt: string; _count: { items: number };
+  paymentMethod: string | null; paymentStatus: string | null;
 }
 
 export default function OrdersPage() {
@@ -80,6 +81,7 @@ export default function OrdersPage() {
                     <th className="px-5 py-3 cursor-pointer select-none hover:text-foreground/50" onClick={() => handleSort("orderNumber")}>Order {sort === "orderNumber" && <span className="text-primary">{dir === "asc" ? " ↑" : " ↓"}</span>}</th>
                     <th className="px-5 py-3 cursor-pointer select-none hover:text-foreground/50" onClick={() => handleSort("customerEmail")}>Customer</th>
                     <th className="px-5 py-3 cursor-pointer select-none hover:text-foreground/50" onClick={() => handleSort("status")}>Status</th>
+                    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Payment</th>
                     <th className="px-5 py-3 cursor-pointer select-none hover:text-foreground/50 text-right" onClick={() => handleSort("total")}>Total</th>
                     <th className="px-5 py-3">Items</th>
                     <th className="px-5 py-3 cursor-pointer select-none hover:text-foreground/50 text-right" onClick={() => handleSort("createdAt")}>Date</th>
@@ -91,6 +93,14 @@ export default function OrdersPage() {
                       <td className="px-5 py-3"><Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-primary hover:underline">{o.orderNumber}</Link></td>
                       <td className="px-5 py-3 text-foreground/70">{o.customerEmail}</td>
                       <td className="px-5 py-3"><span className={`${STATUS_COLORS[o.status] ?? "text-muted-foreground"} capitalize`}>{o.status.replace(/_/g, " ")}</span></td>
+                      <td className="px-5 py-3 text-xs text-muted-foreground capitalize">
+                        <span className="mr-1.5">{o.paymentMethod === "alfan" ? "Alfan" : o.paymentMethod === "cash_on_delivery" ? "COD" : o.paymentMethod === "card" ? "Card" : o.paymentMethod ?? "—"}</span>
+                        {o.paymentStatus && (
+                          <span className={o.paymentStatus === "paid" ? "text-success" : o.paymentStatus === "failed" ? "text-destructive" : "text-amber-500"}>
+                            ({o.paymentStatus})
+                          </span>
+                        )}
+                      </td>
                       <td className="px-5 py-3 text-right text-foreground/80">{new Intl.NumberFormat("en-AE", { style: "currency", currency: o.currency, minimumFractionDigits: 0 }).format(Number(o.total))}</td>
                       <td className="px-5 py-3 text-muted-foreground">{o._count.items}</td>
                       <td className="px-5 py-3 text-right text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</td>

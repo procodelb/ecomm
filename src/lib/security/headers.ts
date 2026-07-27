@@ -28,12 +28,24 @@ export function getSecurityHeaders(): SecurityHeaders {
 }
 
 function getCspHeaders(_domain: string, _isProd: boolean): SecurityHeaders {
+  // Allow Alfan payment domain when configured
+  const alfanUrl = process.env.ALFAN_PAYMENT_URL?.trim();
+  let alfanDomains = "";
+  if (alfanUrl) {
+    try {
+      const parsed = new URL(alfanUrl);
+      alfanDomains = ` ${parsed.origin}`;
+    } catch {
+      // ignore invalid URL
+    }
+  }
+
   const cspDirectives = [
     `default-src ${SELF}`,
     `base-uri ${SELF}`,
-    `connect-src ${SELF} https://*.supabase.co https://*.stripe.com https://*.sanity.io https://*.google-analytics.com https://analytics.google.com https://*.googletagmanager.com https://*.facebook.com https://*.tiktok.com https://*.clarity.ms https://*.hotjar.com https://*.hotjar.io https://api.emailjs.com https://fonts.googleapis.com https://fonts.gstatic.com`,
+    `connect-src ${SELF} https://*.supabase.co https://*.stripe.com https://*.sanity.io https://*.google-analytics.com https://analytics.google.com https://*.googletagmanager.com https://*.facebook.com https://*.tiktok.com https://*.clarity.ms https://*.hotjar.com https://*.hotjar.io https://api.emailjs.com https://fonts.googleapis.com https://fonts.gstatic.com${alfanDomains}`,
     `font-src ${SELF} https://fonts.gstatic.com data:`,
-    `form-action ${SELF} https://*.stripe.com`,
+    `form-action ${SELF} https://*.stripe.com${alfanDomains}`,
     `frame-ancestors ${NONE}`,
     `frame-src ${SELF} https://*.stripe.com https://*.sanity.io https://*.hotjar.com`,
     `img-src ${SELF} data: blob: https:`,

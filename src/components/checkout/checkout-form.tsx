@@ -20,8 +20,17 @@ import {
   MapPin,
   Check,
   ChevronRight,
+  ExternalLink,
+  Banknote,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/client";
+
+interface CheckoutPaymentConfig {
+  provider: "cash_on_delivery" | "alfan" | "stripe";
+  alfanEnabled: boolean;
+  alfanUrl: string | null;
+  stripeEnabled: boolean;
+}
 
 const STEPS = [
   { label: "Cart", state: "complete" as const },
@@ -36,7 +45,7 @@ const PAYMENT_METHODS = [
   { name: "Apple Pay", symbol: "AP" },
 ];
 
-export function CheckoutForm() {
+export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymentConfig }) {
   const locale = useLocale();
   const { items, subtotal, clearCart } = useCart();
   const config = getLocaleConfig(locale);
@@ -44,6 +53,10 @@ export function CheckoutForm() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const alfanEnabled = paymentConfig?.alfanEnabled ?? false;
+  const alfanUrl = paymentConfig?.alfanUrl ?? null;
+  const stripeEnabled = paymentConfig?.stripeEnabled ?? false;
 
   const freeThreshold = config.shippingZones[0]?.freeThreshold ?? 200;
   const shippingRate = config.shippingZones[0]?.rate ?? 0;
@@ -55,17 +68,7 @@ export function CheckoutForm() {
     return `${config.currencySymbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email) {
-      setError("Please enter your email address");
-      return;
-    }
-    if (items.length === 0) {
-      setError("Your cart is empty");
-      return;
-    }
-
+  async function handleCashOnDelivery() {
     setLoading(true);
     setError("");
 
@@ -80,7 +83,8 @@ export function CheckoutForm() {
           locale,
           currency: config.currency,
           customerEmail: email,
-          successUrl: `${origin}/${locale}/order/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+          paymentMethod: "cash_on_delivery",
+          successUrl: `${origin}/${locale}/order/confirmation?order_id={ORDER_ID}`,
           cancelUrl: `${origin}/${locale}/checkout`,
         }),
       });
@@ -105,6 +109,70 @@ export function CheckoutForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setLoading(false);
+    }
+  }
+
+  async function handleAlfanPayment() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const origin = window.location.origin;
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          locale,
+          currency: config.currency,
+          customerEmail: email,
+          paymentMethod: "alfan",
+          successUrl: `${origin}/${locale}/order/confirmation?order_id={ORDER_ID}`,
+          cancelUrl: `${origin}/${locale}/checkout`,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error ?? "Checkout failed");
+      }
+
+      trackEvent("checkout_started", {
+        value: total,
+        currency: config.currency,
+        items: items.map((i) => i.id),
+        contents: JSON.stringify(items.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price }))),
+      });
+
+      if (data.url) {
+        clearCart();
+        window.open(data.url, "_blank", "noopener,noreferrer");
+        // Redirect to confirmation page showing order reference
+        window.location.assign(`${origin}/${locale}/order/confirmation?order_id=${data.orderId}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+    if (items.length === 0) {
+      setError("Your cart is empty");
+      return;
+    }
+
+    if (alfanEnabled && alfanUrl) {
+      await handleAlfanPayment();
+    } else {
+      await handleCashOnDelivery();
     }
   }
 
@@ -244,23 +312,47 @@ export function CheckoutForm() {
                 <span className="text-sm font-heading font-semibold text-foreground">Payment</span>
               </div>
 
+              {/* Stripe unavailable notice */}
+              {!stripeEnabled && (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/50 border border-border">
+                  <Banknote className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Online card payment is currently unavailable. You can complete your order using Cash on Delivery.
+                  </p>
+                </div>
+              )}
+
+              {/* Alfan notice */}
+              {alfanEnabled && (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-primary-10 border border-primary/20">
+                  <ExternalLink className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    Complete your payment securely through Alfan. Your order will remain pending until payment is confirmed.
+                  </p>
+                </div>
+              )}
+
+              {/* Cash on Delivery info */}
               <div className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border">
-                <Lock className="h-4 w-4 text-primary shrink-0" />
+                <Banknote className="h-4 w-4 text-primary shrink-0" />
                 <span className="text-xs text-muted-foreground flex-1">
-                  Your payment info is securely handled by <span className="text-foreground font-medium">Stripe</span>
+                  Pay with <span className="text-foreground font-medium">Cash on Delivery</span>
                 </span>
               </div>
 
-              <div className="flex items-center gap-2.5 flex-wrap">
-                {PAYMENT_METHODS.map((pm) => (
-                  <div
-                    key={pm.name}
-                    className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-border text-[0.5625rem] font-heading font-bold text-muted-foreground/60 tracking-wider"
-                  >
-                    {pm.symbol}
-                  </div>
-                ))}
-              </div>
+              {/* Stripe card icons (only when Stripe is enabled) */}
+              {stripeEnabled && (
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {PAYMENT_METHODS.map((pm) => (
+                    <div
+                      key={pm.name}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-border text-[0.5625rem] font-heading font-bold text-muted-foreground/60 tracking-wider"
+                    >
+                      {pm.symbol}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Submit */}
@@ -279,10 +371,16 @@ export function CheckoutForm() {
                     </svg>
                     Processing Your Order...
                   </span>
+                ) : alfanEnabled && alfanUrl ? (
+                  <span className="flex items-center gap-2.5">
+                    <ExternalLink className="h-5 w-5" />
+                    Pay via Alfan
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
                 ) : (
                   <span className="flex items-center gap-2.5">
                     <Lock className="h-5 w-5" />
-                    Pay {fmt(total)}
+                    Place Order — {fmt(total)}
                     <ChevronRight className="h-4 w-4" />
                   </span>
                 )}
@@ -344,7 +442,7 @@ export function CheckoutForm() {
                       {item.image ? (
                         <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
                       ) : (
-                        <span className="font-heading text-lg text-muted-foreground/20">◈</span>
+                        <span className="font-heading text-lg text-muted-foreground/20">&#9670;</span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0 space-y-0.5">
