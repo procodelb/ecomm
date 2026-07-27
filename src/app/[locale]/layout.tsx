@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer";
 import { seoMetadata } from "@/lib/seo/metadata";
 import { AnalyticsProvider, ConsentBanner } from "@/components/analytics";
 import { AiChatWidget } from "@/components/ai/ai-chat-widget-wrapper";
+import { HtmlAttributes } from "@/components/locale/html-attributes";
 
 type Props = {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
+      <HtmlAttributes />
       <Providers>
         <AnalyticsProvider />
         <ConsentBanner />
