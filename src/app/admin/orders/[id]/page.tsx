@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { getCsrfHeader } from "@/lib/security/csrf-client";
 
 const STATUS_FLOW = ["pending", "payment_received", "processing", "shipped", "in_transit", "delivered"];
 
@@ -49,7 +50,7 @@ export default function OrderDetailPage() {
 
   const updateOrder = async (data: Record<string, unknown>) => {
     setStatusUpdating(true);
-    await fetch("/api/admin/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: params.id, ...data }) });
+    await fetch("/api/admin/orders", { method: "PATCH", headers: { "Content-Type": "application/json", ...getCsrfHeader() }, body: JSON.stringify({ id: params.id, ...data }) });
     const res = await fetch(`/api/admin/orders/${params.id}`).then((r) => r.json());
     setOrder(res); setNewStatus(res.status); setNotes(res.internalNotes ?? "");
     setTrackingNum(res.trackingNumber ?? ""); setTrackingUrl(res.trackingUrl ?? ""); setCarrier(res.shippingCarrier ?? "");
@@ -63,7 +64,7 @@ export default function OrderDetailPage() {
     try {
       const res = await fetch(`/api/admin/orders/${order.id}/confirm-payment`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getCsrfHeader() },
         body: JSON.stringify({}),
       });
       const data = await res.json();

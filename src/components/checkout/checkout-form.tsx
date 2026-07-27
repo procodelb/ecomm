@@ -24,6 +24,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/client";
+import { getCsrfHeader } from "@/lib/security/csrf-client";
 
 interface CheckoutPaymentConfig {
   provider: "cash_on_delivery" | "alfan" | "stripe";
@@ -77,7 +78,7 @@ export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymen
 
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getCsrfHeader() },
         body: JSON.stringify({
           items,
           locale,
@@ -121,7 +122,7 @@ export function CheckoutForm({ paymentConfig }: { paymentConfig?: CheckoutPaymen
 
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getCsrfHeader() },
         body: JSON.stringify({
           items,
           locale,
