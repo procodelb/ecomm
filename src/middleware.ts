@@ -113,7 +113,8 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.match(/\/[^/]+\/account(\/|$)/) || pathname.startsWith("/account")) {
     const authResponse = await checkAuth(request, pathname, new URL("/login", request.url));
-    return addSecurityHeaders(authResponse);
+    const withCsrf = setCsrfCookie(authResponse);
+    return addSecurityHeaders(withCsrf);
   }
 
   const response = await intlMiddleware(request);
@@ -121,7 +122,8 @@ export async function middleware(request: NextRequest) {
   for (const cookie of sessionResponse.cookies.getAll()) {
     response.cookies.set(cookie.name, cookie.value, { path: cookie.path, httpOnly: cookie.httpOnly, secure: cookie.secure, sameSite: cookie.sameSite, domain: cookie.domain, expires: cookie.expires });
   }
-  return addSecurityHeaders(response);
+  const withCsrf = setCsrfCookie(response);
+  return addSecurityHeaders(withCsrf);
 }
 
 export const config = {
