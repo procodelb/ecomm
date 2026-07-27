@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getLocale } from "next-intl/server";
 import { montserrat, inter } from "@/lib/fonts";
 import { SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE } from "@/lib/seo/site-config";
 import "./globals.css";
@@ -34,19 +35,26 @@ export const viewport: Viewport = {
   themeColor: "#0B0B0B",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let locale = "en-AE";
+  try {
+    const detected = await getLocale();
+    if (detected && typeof detected === "string") {
+      locale = detected;
+    }
+  } catch {
+    // During SSG or routes without intl context — use default
+  }
+
+  const dir = locale.startsWith("ar") ? "rtl" : "ltr";
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} dir={dir} className="dark">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var p=location.pathname;if(p.indexOf("/ar-AE")===0){document.documentElement.lang="ar";document.documentElement.dir="rtl"}else if(p.indexOf("/en-AU")===0){document.documentElement.lang="en";document.documentElement.dir="ltr"}})()`,
-          }}
-        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
