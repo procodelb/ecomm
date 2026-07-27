@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getProductPageData, type ProductPageData } from "@/lib/api/product-page";
-import { sanityFetch } from "@/lib/sanity/fetch";
+import { sanityFetch, SanityError } from "@/lib/sanity/fetch";
 import { getLocaleConfig } from "@/lib/locale/config";
 import { SectionWrapper, Container } from "@/components/shared/section-wrapper";
 import { ProductBreadcrumbs } from "@/components/products/product-breadcrumbs";
@@ -25,7 +25,12 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
-  const product = await getProductPageData(slug, locale);
+  let product: ProductPageData | null = null;
+  try {
+    product = await getProductPageData(slug, locale);
+  } catch (err) {
+    console.error(`[product-page] generateMetadata Sanity error for slug=${slug}:`, err instanceof Error ? err.message : "unknown");
+  }
 
   if (!product) return { title: "Product Not Found" };
 
@@ -49,20 +54,42 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const products = await sanityFetch<Array<{ slug: string }>>({
-    query: `*[_type == "product" && defined(slug.current)] { "slug": slug.current }`,
-    tags: ["product-slugs"],
-  });
+  try {
+    const products = await sanityFetch<Array<{ slug: string }>>({
+      query: `*[_type == "product" && defined(slug.current)] { "slug": slug.current }`,
+      tags: ["product-slugs"],
+    });
 
-  if (!products) return [];
-  const locales = ["en-AE", "en-AU", "ar-AE"];
-  return products.flatMap((p) => locales.map((locale) => ({ locale, slug: p.slug })));
+    if (!products) return [];
+    const locales = ["en-AE", "en-AU", "ar-AE"];
+    return products.flatMap((p) => locales.map((locale) => ({ locale, slug: p.slug })));
+  } catch {
+    console.error("[product-page] generateStaticParams: Sanity query failed, returning empty params");
+    return [];
+  }
 }
 
 export default async function ProductPage({ params }: Props) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
-  const product = await getProductPageData(slug, locale);
+
+  let product: ProductPageData | null = null;
+  try {
+    product = await getProductPageData(slug, locale);
+  } catch (err) {
+    console.error(`[product-page] Sanity error rendering slug=${slug}:`, err instanceof Error ? err.message : "unknown");
+    if (err instanceof SanityError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center space-y-4 p-8">
+            <h1 className="font-heading text-2xl font-bold">Service Temporarily Unavailable</h1>
+            <p className="text-muted-foreground">We are unable to load product information right now. Please try again shortly.</p>
+          </div>
+        </div>
+      );
+    }
+    throw err;
+  }
 
   if (!product) notFound();
 
