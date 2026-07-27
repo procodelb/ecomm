@@ -34,13 +34,18 @@ export const viewport: Viewport = {
   themeColor: "#0B0B0B",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale?: string }>;
 }>) {
+  const { locale = "en-AE" } = await params;
+  const dir = locale === "ar-AE" ? "rtl" : "ltr";
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} dir={dir} className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
