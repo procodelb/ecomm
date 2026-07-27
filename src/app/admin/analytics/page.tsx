@@ -12,7 +12,6 @@ interface AnalyticsData {
   productsByStatus: Array<{ status: string; _count: number }>;
 }
 
-const STATUS_COLORS = ["#00C2FF", "#FFD700", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
 const PIE_COLORS = ["#00C2FF", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#FFD700"];
 
 function formatCurrency(value: number): string {
@@ -33,7 +32,6 @@ export default function AnalyticsPage() {
   const ordersByStatus = data.ordersByStatus.map((s) => ({ name: s.status.replace(/_/g, " "), value: s._count }));
   const productsByStatus = data.productsByStatus.map((s) => ({ name: s.status.replace(/_/g, " "), value: s._count }));
   const topProducts = data.topProducts.map((p) => ({ name: p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title, revenue: Number(p._sum.lineTotal) }));
-  const topCategories = data.topCategories.filter((c) => c.category).map((c) => ({ name: c.category!, count: c._count }));
   const revenueByDay = data.ordersByDay.map((d) => ({ date: d.date, revenue: Number(d.revenue), orders: d.orders }));
 
   return (

@@ -29,7 +29,7 @@ export async function GET() {
   // Test Supabase connectivity (anon)
   try {
     const supabase = await createServerSupabaseClient();
-    const { data, error } = await supabase.auth.getSession();
+    const { error } = await supabase.auth.getSession();
     status.supabase.connected = !error;
     if (error) status.supabase.error = error.message;
   } catch (e) {

@@ -39,6 +39,7 @@ export function useAnimateInView<T extends HTMLElement>(options?: Options) {
     });
 
     return () => ctx.revert();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Animation should only run once on mount
   }, []);
 
   return ref;

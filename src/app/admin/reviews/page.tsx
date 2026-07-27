@@ -34,6 +34,7 @@ export default function ReviewsPage() {
     setLoading(false);
   }, [page, search, status, rating]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Data fetching: setState inside effect for async data load
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const moderate = async (id: string, newStatus: string) => {

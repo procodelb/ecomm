@@ -1,27 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
 import { Loader2, XCircle, CheckCircle, LogIn } from "lucide-react";
 
 export default function EmailConfirmationPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const type = searchParams.get("type") ?? "signup";
 
-  const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
+  const [status, setStatus] = useState<"verifying" | "success" | "error">(!token ? "success" : "verifying");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) {
-      setStatus("success");
-      return;
-    }
-
     async function verify() {
       const res = await fetch("/api/auth/verify-email", {
         method: "POST",

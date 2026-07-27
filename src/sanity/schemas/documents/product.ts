@@ -367,7 +367,8 @@ export const productSchema = defineType({
       subtitle: "sku",
       media: "images.0.image",
     },
-    prepare({ title, subtitle, media }: Record<string, any>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prepare({ title, subtitle, media }: { title?: string; subtitle?: string; media?: any }) {
       return {
         title: title || "Untitled Product",
         subtitle: subtitle || "",

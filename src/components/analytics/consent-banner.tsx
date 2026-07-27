@@ -14,6 +14,7 @@ export function ConsentBanner() {
       const timer = setTimeout(() => setVisible(true), 1000);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Consent banner visibility must be set in effect after client mount
     setVisible(false);
   }, []);
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { stripe, stripeTestMode } from "@/lib/stripe/server";
-import { prisma } from "@/lib/prisma";
 import { createOrder } from "@/lib/api/orders";
 import { findOrCreateCustomer } from "@/lib/api/customers";
 import { getLocaleConfig } from "@/lib/locale/config";
@@ -157,7 +156,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create checkout session" },
       { status: 500 },

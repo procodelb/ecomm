@@ -3,7 +3,7 @@ import { processChatRequest, getFallbackReply } from "@/lib/ai/client";
 import { searchProducts, getRandomProducts } from "@/lib/ai/products";
 import { aiConfig, type AssistantType } from "@/lib/ai/config";
 import { HANDOFF_TRIGGER_PHRASES } from "@/lib/ai/prompts";
-import type { ChatMessage, ChatResponse, SuggestedProduct } from "@/lib/ai/types";
+import type { ChatMessage, SuggestedProduct } from "@/lib/ai/types";
 
 export async function POST(request: Request) {
   if (!aiConfig.assistant.enabled) {

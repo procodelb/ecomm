@@ -30,6 +30,7 @@ export default async function ProductsPage({ params }: Props) {
   setRequestLocale(locale);
   const currency = localeCurrencies[locale] || "AED";
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const products = await sanityFetch<any[]>({
     query: productsQuery,
     tags: ["products"],

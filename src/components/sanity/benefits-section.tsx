@@ -30,7 +30,7 @@ const iconMap: Record<string, React.ReactNode> = {
   headphones: <Headphones className="h-6 w-6" />,
 };
 
-export function BenefitsSection({ locale, title, subtitle, benefits = defaultBenefits }: { locale: string; title?: { en?: string; ar?: string }; subtitle?: { en?: string; ar?: string }; benefits?: Benefit[] }) {
+export function BenefitsSection({ locale, subtitle, benefits = defaultBenefits }: { locale: string; title?: { en?: string; ar?: string }; subtitle?: { en?: string; ar?: string }; benefits?: Benefit[] }) {
   const headingRef = useAnimateInView<HTMLDivElement>();
 
   return (

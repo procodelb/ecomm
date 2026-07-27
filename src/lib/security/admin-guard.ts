@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { requireAdmin } from "./rbac";
 import type { Permission, AdminUserInfo } from "./rbac";
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS, type RateLimitConfig } from "./rate-limit";
-import { sanitizeError, sanitizeResponseBody } from "./sanitize";
+import { sanitizeError } from "./sanitize";
 import { logAuditAction, type AuditAction } from "./audit";
 
 type AdminHandler<T = unknown> = (params: {
@@ -18,7 +18,7 @@ type AdminGuardOptions = {
 };
 
 export function withAdminGuard(handler: AdminHandler, options?: AdminGuardOptions) {
-  return async (request: NextRequest, ...args: unknown[]) => {
+  return async (request: NextRequest, ..._args: unknown[]) => {
     try {
       const rlConfig = options?.rateLimit || RATE_LIMITS.admin;
       const rlKey = getRateLimitKey(request, "admin");

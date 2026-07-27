@@ -112,7 +112,8 @@ export const productVariantSchema = defineType({
       media: "images.0.image",
       productTitle: "product.title",
     },
-    prepare({ title, subtitle, media, productTitle }: Record<string, any>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prepare({ title, subtitle, media, productTitle }: { title?: string; subtitle?: string; media?: any; productTitle?: string }) {
       return {
         title: title || "Untitled Variant",
         subtitle: productTitle ? `${subtitle || ""} — ${productTitle}` : subtitle,

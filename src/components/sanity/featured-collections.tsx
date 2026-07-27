@@ -54,7 +54,7 @@ export function FeaturedCollections({ locale, title, subtitle, collections = def
   );
 }
 
-function CollectionCard({ collection, locale, index }: { collection: Collection; locale: string; index: number }) {
+function CollectionCard({ collection, locale }: { collection: Collection; locale: string; index: number }) {
   return (
     <Link href={collection.link || "/products"} className="group block">
       <div className="relative h-[300px] sm:h-[380px] rounded-2xl overflow-hidden border border-border bg-card group-hover:border-white/10 transition-all duration-500">

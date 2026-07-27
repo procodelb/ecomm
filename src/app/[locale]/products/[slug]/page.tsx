@@ -3,7 +3,7 @@ import { unstable_rethrow } from "next/navigation";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getProductPageData, type ProductPageData } from "@/lib/api/product-page";
-import { sanityFetch, SanityError } from "@/lib/sanity/fetch";
+import { sanityFetch } from "@/lib/sanity/fetch";
 import { getLocaleConfig } from "@/lib/locale/config";
 import { SectionWrapper, Container } from "@/components/shared/section-wrapper";
 import { ProductBreadcrumbs } from "@/components/products/product-breadcrumbs";
@@ -40,9 +40,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: "Product Not Found" };
 
   const seo = product.seo ?? {};
-  const price = locale.includes("AU") ? product.priceAud : product.priceAed;
-  const currency = getLocaleConfig(locale).currency;
-
   return seoMetadata({
     title: (seo.metaTitle as string) || product.title,
     description: (seo.metaDescription as string) || product.shortDescription || "",

@@ -71,17 +71,6 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "text-warning",
-  payment_received: "text-blue-400",
-  processing: "text-cyan-400",
-  shipped: "text-purple-400",
-  in_transit: "text-indigo-400",
-  delivered: "text-success",
-  cancelled: "text-destructive",
-  refunded: "text-rose-400",
-};
-
 function StatCard({
   label,
   value,
@@ -125,6 +114,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Data fetching: setState inside effect for async data load
     fetchStats();
   }, [fetchStats]);
 

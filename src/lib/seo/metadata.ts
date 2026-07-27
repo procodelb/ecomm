@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSiteUrl, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE, getLocalizedUrl, getLocaleAlternateUrls } from "./site-config";
+import { SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE, getLocalizedUrl, getLocaleAlternateUrls } from "./site-config";
 
 type SeoInput = {
   title?: string;

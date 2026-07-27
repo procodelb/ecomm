@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { Heading, Text } from "@/components/ui/typography";
-import { Plus, Minus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface FaqItem {
   question: string;

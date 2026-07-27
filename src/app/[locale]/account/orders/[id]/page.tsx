@@ -32,7 +32,6 @@ export default function OrderDetail() {
   if (!order) return <div className="py-24 text-center text-muted-foreground">Order not found</div>;
 
   const shipAddr = order.shippingAddress as Record<string, string>;
-  const billAddr = order.billingAddress as Record<string, string>;
 
   const statusBadge = (s: string) => {
     const colors: Record<string, string> = {

@@ -27,7 +27,7 @@ export function getSecurityHeaders(): SecurityHeaders {
   };
 }
 
-function getCspHeaders(domain: string, isProd: boolean): SecurityHeaders {
+function getCspHeaders(_domain: string, _isProd: boolean): SecurityHeaders {
   const cspDirectives = [
     `default-src ${SELF}`,
     `base-uri ${SELF}`,

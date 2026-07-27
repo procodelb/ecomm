@@ -21,6 +21,7 @@ type SectionRendererProps = {
   includeFooter?: boolean;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sectionComponents: Record<string, ComponentType<any>> = {
   homepageHero: HeroSection,
   threeDShowcase: ThreeDShowcase,

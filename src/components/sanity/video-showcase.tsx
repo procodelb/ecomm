@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAnimateInView } from "@/hooks/use-animate-in-view";
-import { Button, Heading, Text, Caption } from "@/components/ui";
+import { Heading, Text, Caption } from "@/components/ui";
 import { SectionWrapper } from "@/components/shared/section-wrapper";
 import { localize } from "./utils";
 import { Play } from "lucide-react";

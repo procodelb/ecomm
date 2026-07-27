@@ -38,6 +38,7 @@ export default function InventoryPage() {
     setLoading(false);
   }, [page, search, lowStock, outOfStock, warehouse]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Data fetching: setState inside effect for async data load
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const updateQty = async (id: string, quantity: number) => {

@@ -1,7 +1,6 @@
 import { aiConfig } from "./config";
 import type { ChatRequest, ChatResponse } from "./types";
 import { buildSystemPrompt, buildHistoryMessages } from "./prompts";
-import type { ChatMessage } from "./types";
 
 type AiCompletionChoice = {
   message: { content: string };

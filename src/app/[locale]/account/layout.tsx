@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/providers/supabase";
-import { LayoutDashboard, Package, Truck, MapPin, Heart, Star, Undo2, MessageSquare, Settings, Menu, X, ChevronRight, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, Truck, MapPin, Heart, Star, Undo2, MessageSquare, Settings, Menu, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const NAV_ITEMS = [

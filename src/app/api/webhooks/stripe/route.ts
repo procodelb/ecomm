@@ -16,12 +16,6 @@ import { fireAndForget } from "@/lib/utils/fire-and-forget";
 // ── Route config: edge-compatible but rawBody needed, so Node.js runtime ──
 export const runtime = "nodejs";
 
-function env(name: string): string {
-  const val = process.env[name];
-  if (!val) throw new Error(`Missing required env var: ${name}`);
-  return val;
-}
-
 export async function POST(request: Request) {
   // 1. Read raw body + signature
   const rawBody = await request.text();
@@ -330,7 +324,6 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    const stack = err instanceof Error ? err.stack : undefined;
 
     await updateWebhookLogStatus(webhookLogId ?? "", {
       processingStatus: "failed",

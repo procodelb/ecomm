@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Heading, Text, Caption, Card, CardContent, CardFooter } from "@/components/ui";
+import { Button, Heading, Caption, Card, CardContent, CardFooter } from "@/components/ui";
 import { SectionWrapper, Grid } from "@/components/shared/section-wrapper";
 import { ProductImage } from "@/lib/seo/image";
 import { localize } from "./utils";

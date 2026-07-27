@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
-import { getSiteUrl, SITE_NAME } from "@/lib/seo/site-config";
+import { getSiteUrl } from "@/lib/seo/site-config";
 import { localeConfigs, type LocaleKey } from "@/config";
 
 type SitemapEntry = {

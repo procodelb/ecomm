@@ -2,8 +2,7 @@ import "server-only";
 
 import { unstable_rethrow } from "next/navigation";
 import { sanityFetch } from "@/lib/sanity/fetch";
-import { productBySlugQuery, relatedProductsQuery, productVariantsQuery } from "@/sanity/queries/products";
-import { reviewsByProductQuery } from "@/sanity/queries/pages";
+import { productBySlugQuery, relatedProductsQuery } from "@/sanity/queries/products";
 import { prisma } from "@/lib/prisma";
 import { getLocaleConfig } from "@/lib/locale/config";
 
@@ -126,19 +125,6 @@ export interface ProductPageData {
   locale: string;
   currency: string;
   currencySymbol: string;
-}
-
-function getPrice(data: { aed: number; aud: number }, locale: string): number {
-  return locale.includes("AU") ? data.aud : data.aed;
-}
-
-function getComparePrice(
-  data: { aed?: number; aud?: number } | null | undefined,
-  locale: string,
-): number | null {
-  if (!data) return null;
-  const val = locale.includes("AU") ? data.aud : data.aed;
-  return val ?? null;
 }
 
 function getLocalized(data: Record<string, string> | null | undefined, locale: string): string {

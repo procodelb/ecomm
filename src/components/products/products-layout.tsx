@@ -147,9 +147,11 @@ export function ProductsLayout({ products, locale, currency, className }: Produc
   useEffect(() => {
     const cat = searchParams?.get("category");
     if (cat !== selectedCategory) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync selected category from URL search params
       setSelectedCategory(cat ?? null);
       setPage(1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Sync from URL only on searchParams change
   }, [searchParams]);
 
   const categoryCounts = useMemo(() => {

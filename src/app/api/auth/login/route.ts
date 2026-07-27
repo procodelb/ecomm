@@ -3,8 +3,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { checkBruteForce, recordFailedAttempt, resetBruteForce, getBruteForceKey } from "@/lib/security/brute-force";
 
 export async function POST(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded?.split(",")[0]?.trim() || "127.0.0.1";
   const body = await request.json();
   const { email, password } = body;
 

@@ -18,7 +18,7 @@ import {
   CircleCheck,
   Zap,
 } from "lucide-react";
-import type { ProductPageData, ProductPageVariant } from "@/lib/api/product-page";
+import type { ProductPageData } from "@/lib/api/product-page";
 
 interface ProductInfoProps {
   product: ProductPageData;

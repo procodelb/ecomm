@@ -31,6 +31,7 @@ export default function OrderConfirmationPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration guard: must set mounted state in effect
     setMounted(true);
 
     // In test mode — fetch order if order_id is present

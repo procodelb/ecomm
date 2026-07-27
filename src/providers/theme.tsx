@@ -27,6 +27,7 @@ export function ThemeProvider({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration guard: must set mounted state in effect
     setMounted(true);
     const stored = localStorage.getItem("theme") as Theme | null;
     if (stored) setTheme(stored);

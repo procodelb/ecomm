@@ -144,6 +144,7 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale);
 
   const homepage = await sanityFetch<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sections: any[];
   }>({
     query: homepageQuery,
@@ -153,7 +154,9 @@ export default async function HomePage({ params }: Props) {
 
   const sections = homepage?.sections?.length ? homepage.sections : fallbackSections;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const faqData = (sections.find((s: any) => s._type === "faqSection") || faqSection).faqs?.map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (f: any) => ({
       question: f.question?.en || "",
       answer: f.answer?.en || "",

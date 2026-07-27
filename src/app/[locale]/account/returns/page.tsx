@@ -10,7 +10,7 @@ type ReturnRequest = {
 };
 
 export default function AccountReturns() {
-  const { locale } = useParams<{ locale: string }>();
+  useParams<{ locale: string }>();
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [orders, setOrders] = useState<{ id: string; orderNumber: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);

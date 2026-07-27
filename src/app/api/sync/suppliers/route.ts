@@ -70,7 +70,7 @@ function authGuard(request: NextRequest): TriggerSource | null {
 }
 
 // ── GET: status / last sync info ─────────────────────────────────────────
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const lastSyncs = await prisma.supplierLog.findMany({
       where: { eventType: "product_sync" },
@@ -224,12 +224,6 @@ async function detectChanges(
   const stockUpdated = 0;
   const discontinued: string[] = [];
   const backInStock: string[] = [];
-
-  // Find products that were active but the supplier no longer provides
-  const dbProducts = await prisma.product.findMany({
-    where: { supplierId, status: "active" },
-    select: { id: true, sku: true, title: true },
-  });
 
   if (syncResult.total > 0) {
     // TODO: compare synced SKUs vs dbProducts to detect discontinuations

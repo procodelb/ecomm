@@ -33,6 +33,7 @@ export default function WebhooksPage() {
     setLoading(false);
   }, [page, provider, status]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Data fetching: setState inside effect for async data load
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const retry = async (id: string) => {

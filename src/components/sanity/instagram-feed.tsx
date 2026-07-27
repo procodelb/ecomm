@@ -21,7 +21,7 @@ type Props = {
   posts?: Post[];
 };
 
-const defaultPosts: Post[] = Array.from({ length: 6 }, (_, i) => ({
+const defaultPosts: Post[] = Array.from({ length: 6 }, () => ({
   image: undefined,
   likes: Math.floor(Math.random() * 5000 + 500),
   caption: { en: "Living the dream on the water" },

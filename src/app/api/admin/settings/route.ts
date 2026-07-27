@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAdminGuard } from "@/lib/security/admin-guard";
 
@@ -11,7 +11,7 @@ const DEFAULT_AI_SETTINGS = {
   },
 };
 
-export const GET = withAdminGuard(async ({ request }) => {
+export const GET = withAdminGuard(async ({ request: _request }) => {
   const [totalSuppliers, totalProducts, totalOrders, totalCustomers, adminUsers] = await Promise.all([
     prisma.supplier.count(),
     prisma.product.count(),

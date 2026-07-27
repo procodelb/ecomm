@@ -116,7 +116,7 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(authResponse);
   }
 
-  let response = await intlMiddleware(request);
+  const response = await intlMiddleware(request);
   const sessionResponse = await updateSession(request);
   for (const cookie of sessionResponse.cookies.getAll()) {
     response.cookies.set(cookie.name, cookie.value, { path: cookie.path, httpOnly: cookie.httpOnly, secure: cookie.secure, sameSite: cookie.sameSite, domain: cookie.domain, expires: cookie.expires });

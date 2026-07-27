@@ -32,6 +32,7 @@ export default function CustomersPage() {
     setLoading(false);
   }, [page, search, sort, dir]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Data fetching: setState inside effect for async data load
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleSort = (key: string) => {

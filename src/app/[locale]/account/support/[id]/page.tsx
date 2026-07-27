@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
 type Message = { id: string; authorType: string; message: string; createdAt: string };
@@ -17,13 +17,13 @@ export default function TicketDetail() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
 
-  const fetchTicket = () => {
+  const fetchTicket = useCallback(() => {
     fetch(`/api/account/support/${id}`)
       .then((r) => r.json())
       .then((data) => { setTicket(data); setLoading(false); });
-  };
+  }, [id]);
 
-  useEffect(() => { fetchTicket(); }, [id]);
+  useEffect(() => { fetchTicket(); }, [fetchTicket]);
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();

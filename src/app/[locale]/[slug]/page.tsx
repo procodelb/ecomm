@@ -1,4 +1,4 @@
-import { notFound, unstable_rethrow } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { sanityFetch } from "@/lib/sanity/fetch";
@@ -7,7 +7,7 @@ import { Heading, Text, Caption } from "@/components/ui";
 import { SectionWrapper } from "@/components/shared/section-wrapper";
 import { seoMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/lib/seo/json-ld";
-import { breadcrumbSchema, articleSchema } from "@/lib/seo/schemas";
+import { breadcrumbSchema } from "@/lib/seo/schemas";
 import { getLocalizedUrl } from "@/lib/seo/site-config";
 
 type Props = {
@@ -69,9 +69,9 @@ export default async function CmsPage({ params }: Props) {
 
           {textBlocks.length > 0 ? (
             <div className="prose-luxury">
-              {textBlocks.map((section: any, i: number) => {
-                const text = section.children?.map((c: any) => c.text).join("") ||
-                  section.content?.map((c: any) => c.children?.map((cc: any) => cc.text).join("")).join("\n\n") || "";
+              {textBlocks.map((section: { _type: string; children?: { text: string }[]; content?: { children: { text: string }[] }[] }, i: number) => {
+                const text = section.children?.map((c: { text: string }) => c.text).join("") ||
+                  section.content?.map((c: { children: { text: string }[] }) => c.children?.map((cc: { text: string }) => cc.text).join("")).join("\n\n") || "";
                 if (!text) return null;
                 return <p key={i} className="mb-5 last:mb-0">{text}</p>;
               })}

@@ -81,7 +81,7 @@ export function hasPermission(role: Role, permission: Permission): boolean {
   return getPermissions(role).includes(permission);
 }
 
-export function requirePermission(permission: Permission, role: Role | null, adminEmail?: string) {
+export function requirePermission(permission: Permission, role: Role | null, _adminEmail?: string) {
   if (!role || !hasPermission(role, permission)) {
     return NextResponse.json(
       { error: "Forbidden: insufficient permissions" },

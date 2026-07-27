@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
@@ -39,7 +38,6 @@ const PAYMENT_METHODS = [
 
 export function CheckoutForm() {
   const locale = useLocale();
-  const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
   const config = getLocaleConfig(locale);
 
@@ -102,7 +100,7 @@ export function CheckoutForm() {
 
       if (data.url) {
         clearCart();
-        window.location.href = data.url;
+        window.location.assign(data.url);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
