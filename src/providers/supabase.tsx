@@ -6,21 +6,27 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
   refresh: () => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   refresh: async () => {},
+  signOut: async () => {},
 });
 
 export function useAuth() {
@@ -30,6 +36,9 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const signingOut = useRef(false);
+  const router = useRouter();
+  const locale = useLocale();
 
   const refresh = useCallback(async () => {
     const supabase = createClient();
@@ -39,6 +48,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentUser);
     setLoading(false);
   }, []);
+
+  const signOut = useCallback(async () => {
+    if (signingOut.current) return;
+    signingOut.current = true;
+
+    try {
+      await apiFetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // proceed even if request fails — clear local state
+    }
+
+    setUser(null);
+
+    const supabase = createClient();
+    await supabase.auth.signOut({ scope: "local" });
+
+    signingOut.current = false;
+    router.push(`/${locale}`);
+    router.refresh();
+  }, [router, locale]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -58,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refresh }}>
+    <AuthContext.Provider value={{ user, loading, refresh, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useLocale } from "next-intl";
+import { useAuth } from "@/providers/supabase";
+import { getAuthLabels } from "@/lib/locale/auth-labels";
 
 const footerLinks = [
   {
@@ -44,6 +46,20 @@ const paymentIcons = ["visa", "mastercard", "amex", "paypal", "applepay", "googl
 
 export function Footer() {
   const locale = useLocale();
+  const { user, signOut } = useAuth();
+  const t = getAuthLabels(locale);
+
+  const accountLinks = user
+    ? [
+        { href: "/account", label: t.myAccount },
+        { href: "/account/orders", label: t.myOrders },
+        { href: "/account/wishlist", label: t.wishlist },
+      ]
+    : [
+        { href: "/login", label: t.signIn },
+        { href: "/register", label: t.createAccount },
+        { href: "/account/tracking", label: t.orderTracking },
+      ];
 
   return (
     <footer className="relative border-t border-border bg-dark">
@@ -98,6 +114,34 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          <div>
+            <h4 className="font-heading text-[0.625rem] tracking-[0.15em] uppercase text-muted-foreground mb-5 font-semibold">
+              {t.account}
+            </h4>
+            <ul className="space-y-3">
+              {accountLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={`/${locale}${link.href}`}
+                    className="text-sm text-muted-foreground/70 hover:text-foreground transition-colors duration-300"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              {user && (
+                <li>
+                  <button
+                    onClick={() => signOut()}
+                    className="text-sm text-muted-foreground/70 hover:text-foreground transition-colors duration-300 text-left"
+                  >
+                    {t.logOut}
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
 
         <div className="mt-16 pt-8 border-t border-border">

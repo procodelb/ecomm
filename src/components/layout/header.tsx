@@ -6,7 +6,9 @@ import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui";
 import { useCart } from "@/providers/cart";
-import { ShoppingBag, Search, Menu, X } from "lucide-react";
+import { useAuth } from "@/providers/supabase";
+import { getAuthLabels } from "@/lib/locale/auth-labels";
+import { ShoppingBag, Search, Menu, X, LogOut, User, Package } from "lucide-react";
 
 const navLinks = [
   { href: "/products", label: "Products" },
@@ -16,11 +18,23 @@ const navLinks = [
   { href: "/faq", label: "FAQ" },
 ];
 
+function AuthPlaceholder() {
+  return (
+    <div className="hidden lg:flex items-center gap-2 ml-2">
+      <div className="h-9 w-[80px] rounded-xl bg-white/[0.03] animate-pulse" />
+      <div className="h-9 w-[110px] rounded-xl bg-white/[0.03] animate-pulse" />
+    </div>
+  );
+}
+
 export function Header() {
   const locale = useLocale();
+  const { user, loading, signOut } = useAuth();
+  const t = getAuthLabels(locale);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const lastScroll = useRef(0);
   const { totalItems, openDrawer } = useCart();
 
@@ -39,6 +53,14 @@ export function Header() {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
+
+  async function handleSignOut() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setMobileOpen(false);
+    await signOut();
+    setLoggingOut(false);
+  }
 
   return (
     <header
@@ -75,6 +97,49 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1.5">
+            {loading ? (
+              <AuthPlaceholder />
+            ) : user ? (
+              <div className="hidden lg:flex items-center gap-1">
+                <Link href={`/${locale}/account`}>
+                  <Button variant="ghost" size="sm" className="gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                    <User className="h-4 w-4" />
+                    {t.myAccount}
+                  </Button>
+                </Link>
+                <Link href={`/${locale}/account/orders`}>
+                  <Button variant="ghost" size="sm" className="gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                    <Package className="h-4 w-4" />
+                    {t.myOrders}
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  onClick={handleSignOut}
+                  disabled={loggingOut}
+                  aria-label={t.logOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {loggingOut ? "..." : t.logOut}
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden lg:flex items-center gap-2">
+                <Link href={`/${locale}/login`}>
+                  <Button variant="ghost" size="sm" className="text-sm font-medium">
+                    {t.signIn}
+                  </Button>
+                </Link>
+                <Link href={`/${locale}/register`}>
+                  <Button size="sm" className="text-sm font-medium">
+                    {t.createAccount}
+                  </Button>
+                </Link>
+              </div>
+            )}
+
             <Link href={`/${locale}/search`}>
               <Button variant="ghost" size="icon" aria-label="Search">
                 <Search className="h-[18px] w-[18px]" />
@@ -107,11 +172,11 @@ export function Header() {
 
       <div
         className={cn(
-          "lg:hidden fixed inset-0 top-20 z-40 bg-dark/98 backdrop-blur-2xl transition-all duration-400",
+          "lg:hidden fixed inset-0 top-20 z-40 bg-dark/98 backdrop-blur-2xl transition-all duration-400 overflow-y-auto",
           mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
         )}
       >
-        <div className="flex flex-col gap-1 p-6 pt-8">
+        <div className="flex flex-col gap-1 p-6 pt-8 pb-24">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -122,17 +187,53 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+
           <div className="mt-6 pt-6 border-t border-border px-4 space-y-3">
-            <Link href={`/${locale}/login`} onClick={() => setMobileOpen(false)}>
-              <Button variant="primary" size="lg" className="w-full">
-                Sign In
-              </Button>
-            </Link>
-            <Link href={`/${locale}/register`} onClick={() => setMobileOpen(false)}>
-              <Button variant="outline" size="lg" className="w-full">
-                Create Account
-              </Button>
-            </Link>
+            {loading ? (
+              <div className="space-y-3">
+                <div className="h-12 w-full rounded-xl bg-white/[0.03] animate-pulse" />
+                <div className="h-12 w-full rounded-xl bg-white/[0.03] animate-pulse" />
+              </div>
+            ) : user ? (
+              <>
+                <Link href={`/${locale}/account`} onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="lg" className="w-full gap-2">
+                    <User className="h-4 w-4" />
+                    {t.myAccount}
+                  </Button>
+                </Link>
+                <Link href={`/${locale}/account/orders`} onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="lg" className="w-full gap-2">
+                    <Package className="h-4 w-4" />
+                    {t.myOrders}
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="w-full gap-2 text-muted-foreground"
+                  onClick={handleSignOut}
+                  disabled={loggingOut}
+                  aria-label={t.logOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {loggingOut ? "..." : t.logOut}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href={`/${locale}/login`} onClick={() => setMobileOpen(false)}>
+                  <Button variant="primary" size="lg" className="w-full">
+                    {t.signIn}
+                  </Button>
+                </Link>
+                <Link href={`/${locale}/register`} onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="lg" className="w-full">
+                    {t.createAccount}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
